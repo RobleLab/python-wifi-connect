@@ -22,8 +22,8 @@ def have_active_internet_connection(host="8.8.8.8", port=53, timeout=2):
    try:
      socket.setdefaulttimeout(timeout)
      socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
-     # return True
-     return False
+     return True
+    #return False
    except Exception as e:
      #print(f"Exception: {e}")
      return False
@@ -42,7 +42,7 @@ def delete_all_wifi_connections():
                 + connection.GetSettings()["connection"]["id"]
             )
             connection.Delete()
-    time.sleep(2)
+    time.sleep(5)
 
 
 #------------------------------------------------------------------------------
@@ -82,6 +82,7 @@ def get_list_of_access_points():
     ssids = [] # list we return
 
     for dev in NetworkManager.NetworkManager.GetDevices():
+
         if dev.DeviceType != NetworkManager.NM_DEVICE_TYPE_WIFI:
             continue
         for ap in dev.GetAccessPoints():
@@ -111,7 +112,7 @@ def get_list_of_access_points():
                     ap.RsnFlags & NetworkManager.NM_802_11_AP_SEC_KEY_MGMT_802_1X:
                 security = NM_SECURITY_ENTERPRISE
 
-            #print(f'{ap.Ssid:15} Flags=0x{ap.Flags:X} WpaFlags=0x{ap.WpaFlags:X} RsnFlags=0x{ap.RsnFlags:X}')
+            print(f'{ap.Ssid:15} Flags=0x{ap.Flags:X} WpaFlags=0x{ap.WpaFlags:X} RsnFlags=0x{ap.RsnFlags:X}', flush=True)
 
             # Decode our flag into a display string
             security_str = ''
@@ -145,14 +146,17 @@ def get_list_of_access_points():
     # always add a hidden place holder
     ssids.append({"ssid": "Enter a hidden WiFi name", "security": "HIDDEN"})
 
-    print(f'Available SSIDs: {ssids}')
+    print(f'Available SSIDs: {ssids}', flush=True)
     return ssids
 
 
 #------------------------------------------------------------------------------
 # Get hotspot SSID name.
 def get_hotspot_SSID():
-    return 'SSID-'+os.getenv('RESIN_DEVICE_NAME_AT_INIT','beta')
+    return os.getenv('PREFIX_SSID')+os.getenv('RESIN_DEVICE_NAME_AT_INIT')+os.getenv('SUFIX_SSID')
+
+    # Add last 4 caracters from mac address.
+    #return os.getenv('PREFIX_SSID')+os.getenv('RESIN_DEVICE_NAME_AT_INIT')+(hex(uuid.getnode()))[-4:]
 
 
 #------------------------------------------------------------------------------

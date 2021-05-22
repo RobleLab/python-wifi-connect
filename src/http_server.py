@@ -10,8 +10,8 @@ import netman
 import dnsmasq
 
 # Defaults
-ADDRESS = '192.168.42.1'
-PORT = 80
+ADDRESS = os.environ['DEFAULT_GATEWAY']
+PORT = int(os.environ['PORT'])
 UI_PATH = '../ui'
 
 
@@ -68,10 +68,19 @@ def RequestHandlerClassFactory(address, ssids, rcode):
 
             # For Android Devices
             if '/generate_204' == self.path:
-                redirect(self)
+                self.send_response(301) # redirect
+                new_path = f'http://{self.address}/'
+                print(f'redirecting to {new_path}')
+                self.send_header('Location', new_path)
+                self.end_headers()
+               # redirect(self)
 
             # For Windows 10?
             if '/connecttest.txt' == self.path:
+                redirect(self)
+
+            # For Ubuntu
+            if '/misc/check_network_status.txt' == self.path:
                 redirect(self)
 
             if '/generate_204' == self.path:
@@ -135,13 +144,12 @@ def RequestHandlerClassFactory(address, ssids, rcode):
                 content_length = int(self.headers['Content-Length'])
             except TypeError:
                 content_length = 0
-
             body = self.rfile.read(content_length)
             self.send_response(200)
             self.end_headers()
             response = BytesIO()
             fields = parse_qs(body.decode('utf-8'))
-            #print(f'POST received: {fields}')
+            print(f'POST received: {fields}')
 
             # Parse the form post
             FORM_SSID = 'ssid'
@@ -216,11 +224,12 @@ def main(address, port, ui_path, rcode, delete_connections):
 
     # See if caller wants to delete all existing connections first
     if delete_connections:
+        print('deleting all existing connections', flush=True)
         netman.delete_all_wifi_connections()
 
     # Check if we are already connected, if so we are done.
     if netman.have_active_internet_connection():
-        print('Already connected to the internet, nothing to do, exiting.')
+        print('Already connected to the internet, nothing to do, exiting.', flush=True)
         sys.exit()
 
     # Get list of available AP from net man.  
@@ -231,7 +240,7 @@ def main(address, port, ui_path, rcode, delete_connections):
 
     # Start the hotspot
     if not netman.start_hotspot():
-        print('Error starting hotspot, exiting.')
+        print('Error starting hotspot, exiting.', flush=True)
         sys.exit(1)
 
     # Start dnsmasq (to advertise us as a router so captured portal pops up
@@ -240,7 +249,7 @@ def main(address, port, ui_path, rcode, delete_connections):
 
     # Find the ui directory which is up one from where this file is located.
     web_dir = os.path.join(os.path.dirname(__file__), ui_path)
-    print(f'HTTP serving directory: {web_dir} on {address}:{port}')
+    print(f'HTTP serving directory: {web_dir} on {address}:{port}', flush=True)
 
     # Change to this directory so the HTTPServer returns the index.html in it 
     # by default when it gets a GET.
@@ -254,7 +263,7 @@ def main(address, port, ui_path, rcode, delete_connections):
 
     # Start an HTTP server to serve the content in the ui dir and handle the 
     # POST request in the handler class.
-    print(f'Waiting for a connection to our hotspot {netman.get_hotspot_SSID()} ...')
+    print(f'Waiting for a connection to our hotspot {netman.get_hotspot_SSID()} ...', flush=True)
     httpd = MyHTTPServer(web_dir, server_address, MyRequestHandlerClass)
     try:
         httpd.serve_forever()
@@ -281,7 +290,7 @@ if __name__ == "__main__":
     address = ADDRESS
     port = PORT
     ui_path = UI_PATH
-    delete_connections = False
+    delete_connections = True
     rcode = ''
 
     usage = ''\
@@ -319,11 +328,11 @@ f'  -h Show help.\n'
         elif opt in ("-u"):
             ui_path = arg
 
-    print(f'Address={address}')
-    print(f'Port={port}')
-    print(f'UI path={ui_path}')
-    print(f'Device registration code={rcode}')
-    print(f'Delete Connections={delete_connections}')
+    print(f'Address={address}', flush=True)
+    print(f'Port={port}', flush=True)
+    print(f'UI path={ui_path}', flush=True)
+    print(f'Device registration code={rcode}', flush=True)
+    print(f'Delete Connections={delete_connections}', flush=True)
     main(address, port, ui_path, rcode, delete_connections)
 
 
