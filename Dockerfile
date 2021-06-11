@@ -24,10 +24,10 @@ COPY ./config/requirements.txt .
 RUN pip install --extra-index-url https://www.piwheels.org/simple -r requirements.txt
 #procps
 
-#COPY src/ ./app/src/
-#COPY nm_scripts/ ./app/nm_scripts/
+COPY src/ ./app/src/
+COPY nm_scripts/ ./app/nm_scripts/
 COPY scripts/ ./app/scripts/
-#COPY ui/ ./app/ui/
+COPY ui/ ./app/ui/
 
 # Make sure we use the virtualenv:
 ENV PATH="/opt/venv/bin:$PATH"

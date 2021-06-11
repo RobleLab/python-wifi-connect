@@ -17,9 +17,7 @@ services:
     volumes:
       - /run/user/1000/bus:/run/user/1000/bus
       - /run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket
-      - ./src/:/app/src/
-      - ./nm_scripts/:/app/nm_scripts/
-      - ./ui/:/app/ui/
 
     privileged: true
     network_mode: "host"
+    restart: always
